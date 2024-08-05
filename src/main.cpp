@@ -54,7 +54,7 @@ void loop() {
 
   // Configure message to transmit
   twai_message_t message_transmit;
-  message_transmit.identifier = 0x050;
+  message_transmit.identifier = 0x3FF;
   message_transmit.extd = 0;
   message_transmit.data_length_code = 5;
   message_transmit.data[0] = 1;
@@ -80,7 +80,7 @@ void loop() {
     return;
   }
 
-  uint32_t identifier = 0x3FF;
+  uint32_t identifier = 0x050;
 
   // Wait for message to be received
   twai_message_t message_receive;
