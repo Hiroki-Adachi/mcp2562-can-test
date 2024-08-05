@@ -7,8 +7,8 @@
 // const gpio_num_t kCanRx = GPIO_NUM_7;
 
 // sub
-const gpio_num_t kCanTx = GPIO_NUM_35;
-const gpio_num_t kCanRx = GPIO_NUM_36;
+const gpio_num_t kCanTx = GPIO_NUM_4;
+const gpio_num_t kCanRx = GPIO_NUM_5;
 
 void setup() {
   Serial.begin(115200);
