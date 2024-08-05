@@ -52,47 +52,47 @@ void loop() {
   // Start TWAI driver
   while (!twai_start() == ESP_OK);
 
-  // Configure message to transmit
-  twai_message_t message_transmit;
-  message_transmit.identifier = 0x3FF;
-  message_transmit.extd = 0;
-  message_transmit.data_length_code = 5;
-  message_transmit.data[0] = 1;
-  message_transmit.data[1] = 7;
-  message_transmit.data[2] = 1;
-  message_transmit.data[3] = 4;
-  message_transmit.data[4] = 0;
+  // // Configure message to transmit
+  // twai_message_t message_transmit;
+  // message_transmit.identifier = 0x3FF;
+  // message_transmit.extd = 0;
+  // message_transmit.data_length_code = 5;
+  // message_transmit.data[0] = 1;
+  // message_transmit.data[1] = 7;
+  // message_transmit.data[2] = 1;
+  // message_transmit.data[3] = 4;
+  // message_transmit.data[4] = 0;
 
-  // Queue message for transmission
-  if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_OK) {
-    printf("Message queued for transmission\n");
-  } else if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_ERR_INVALID_ARG) {
-    printf("ESP_ERR_INVALID_ARG: twai_transmit()\n");
-  } else if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_ERR_TIMEOUT) {
-    printf("ESP_ERR_INVALID_TIMEOUT: twai_transmit()\n");
-  } else if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_FAIL) {
-    printf("ESP_FAIL: twai_transmit()\n");
-  } else if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_ERR_INVALID_STATE) {
-    printf("ESP_ERR_INVALID_STATE: twai_transmit()\n");
-  } else if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_ERR_NOT_SUPPORTED) {
-    printf("ESP_ERR_NOT_SUPPORTED: twai_transmit()\n");
-  } else {
-    return;
-  }
+  // // Queue message for transmission
+  // if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_OK) {
+  //   printf("Message queued for transmission\n");
+  // } else if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_ERR_INVALID_ARG) {
+  //   printf("ESP_ERR_INVALID_ARG: twai_transmit()\n");
+  // } else if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_ERR_TIMEOUT) {
+  //   printf("ESP_ERR_INVALID_TIMEOUT: twai_transmit()\n");
+  // } else if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_FAIL) {
+  //   printf("ESP_FAIL: twai_transmit()\n");
+  // } else if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_ERR_INVALID_STATE) {
+  //   printf("ESP_ERR_INVALID_STATE: twai_transmit()\n");
+  // } else if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_ERR_NOT_SUPPORTED) {
+  //   printf("ESP_ERR_NOT_SUPPORTED: twai_transmit()\n");
+  // } else {
+  //   return;
+  // }
 
-  uint32_t identifier = 0x050;
+  uint32_t identifier = 0x000;
 
   // Wait for message to be received
   twai_message_t message_receive;
   while (1) {
-    if (twai_receive(&message_receive, pdMS_TO_TICKS(10000)) == ESP_OK) {
+    if (twai_receive(&message_receive, pdMS_TO_TICKS(1000)) == ESP_OK) {
       printf("Message received\n");
       if (message_receive.identifier == identifier) break;
-    } else if (twai_receive(&message_receive, pdMS_TO_TICKS(10000)) == ESP_ERR_TIMEOUT) {
+    } else if (twai_receive(&message_receive, pdMS_TO_TICKS(1000)) == ESP_ERR_TIMEOUT) {
       printf("ESP_ERR_TIMEOUT: twai_receive()\n");
-    } else if (twai_receive(&message_receive, pdMS_TO_TICKS(10000)) == ESP_ERR_INVALID_ARG) {
+    } else if (twai_receive(&message_receive, pdMS_TO_TICKS(1000)) == ESP_ERR_INVALID_ARG) {
       printf("ESP_ERR_INVALID_ARG: twai_receive()\n");
-    } else if (twai_receive(&message_receive, pdMS_TO_TICKS(10000)) == ESP_ERR_INVALID_STATE) {
+    } else if (twai_receive(&message_receive, pdMS_TO_TICKS(1000)) == ESP_ERR_INVALID_STATE) {
       printf("ESP_ERR_INVALID_STATE: twai_receive()\n");
     } else {
       return;
