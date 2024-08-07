@@ -16,8 +16,11 @@ void setup() {
 
   // Initialize configuration structures using macro initializers
   twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(kCanTx, kCanRx, TWAI_MODE_NORMAL);
-  twai_timing_config_t t_config = TWAI_TIMING_CONFIG_250KBITS();
+  twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();
   twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
+
+  pinMode(BUILTIN_LED, OUTPUT);
+  digitalWrite(BUILTIN_LED, HIGH);
 
   // Install TWAI driver
   while (!twai_driver_install(&g_config, &t_config, &f_config) == ESP_OK);
@@ -79,38 +82,38 @@ void loop() {
     return;
   }
 
-  // uint32_t identifier = 0x000;
+  uint32_t identifier = 0x1806E5F4;
 
-  // // Wait for message to be received
-  // twai_message_t message_receive;
-  // while (1) {
-  //   if (twai_receive(&message_receive, pdMS_TO_TICKS(1000)) == ESP_OK) {
-  //     printf("Message received\n");
-  //     if (message_receive.identifier == identifier) break;
-  //   } else if (twai_receive(&message_receive, pdMS_TO_TICKS(1000)) == ESP_ERR_TIMEOUT) {
-  //     printf("ESP_ERR_TIMEOUT: twai_receive()\n");
-  //   } else if (twai_receive(&message_receive, pdMS_TO_TICKS(1000)) == ESP_ERR_INVALID_ARG) {
-  //     printf("ESP_ERR_INVALID_ARG: twai_receive()\n");
-  //   } else if (twai_receive(&message_receive, pdMS_TO_TICKS(1000)) == ESP_ERR_INVALID_STATE) {
-  //     printf("ESP_ERR_INVALID_STATE: twai_receive()\n");
-  //   } else {
-  //     return;
-  //   }
-  // }
+  // Wait for message to be received
+  twai_message_t message_receive;
+  while (1) {
+    esp_err_t result = twai_receive(&message_receive, pdMS_TO_TICKS(3000));
+    if (result == ESP_OK) {
+      printf("Message received\n");
+      if (message_receive.identifier == identifier) break;
+    } else if (result == ESP_ERR_TIMEOUT) {
+      printf("ESP_ERR_TIMEOUT: twai_receive()\n");
+    } else if (result == ESP_ERR_INVALID_ARG) {
+      printf("ESP_ERR_INVALID_ARG: twai_receive()\n");
+    } else if (result == ESP_ERR_INVALID_STATE) {
+      printf("ESP_ERR_INVALID_STATE: twai_receive()\n");
+    }
+    printf("--->\n");
+  }
 
-  // // Process received message
-  // if (message_receive.extd) {
-  //   printf("Message is in Extended Format\n");
-  //   printf("ID is %x\n", message_receive.identifier);
-  // } else {
-  //   printf("Message is in Standard Format\n");
-  //   printf("ID is %x\n", message_receive.identifier);
-  // }
-  // if (!(message_receive.rtr)) {
-  //   for (int i = 0; i < message_receive.data_length_code; i++) {
-  //     printf("Data byte %d = %u\n", i, message_receive.data[i]);
-  //   }
-  // }
+  // Process received message
+  if (message_receive.extd) {
+    printf("Message is in Extended Format\n");
+    printf("ID is %x\n", message_receive.identifier);
+  } else {
+    printf("Message is in Standard Format\n");
+    printf("ID is %x\n", message_receive.identifier);
+  }
+  if (!(message_receive.rtr)) {
+    for (int i = 0; i < message_receive.data_length_code; i++) {
+      printf("Data byte %d = %x\n", i, message_receive.data[i]);
+    }
+  }
 
   while (!(twai_stop() == ESP_OK));
   // Serial.printf("TWAI stopped...\n");
