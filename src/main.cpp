@@ -1,5 +1,7 @@
 #include <Arduino.h>
 
+#include <array>
+
 #include "driver/gpio.h"
 #include "driver/twai.h"
 // main
@@ -97,7 +99,7 @@ void loop() {
     } else if (twai_receive(&message_receive, pdMS_TO_TICKS(10000)) == ESP_ERR_INVALID_STATE) {
       printf("ESP_ERR_INVALID_STATE: twai_receive()\n");
     } else {
-      return;
+      printf("ESP_ERR_INVALID_STATE: not define()\n");
     }
   }
 
@@ -114,6 +116,23 @@ void loop() {
       printf("Data byte %d = %u\n", i, message_receive.data[i]);
     }
   }
+
+  std::array<uint8_t, 2> bytes = {message_receive.data[2], message_receive.data[3]};
+  float current_battery = static_cast<float>(((bytes[1]) << 8 | bytes[0]) / 100 - 36);
+  bytes = {message_receive.data[4], message_receive.data[5]};
+  float current_cherger = static_cast<float>(((bytes[1]) << 8 | bytes[0]) / 100);
+  bytes = {message_receive.data[6], message_receive.data[7]};
+  float current_load = static_cast<float>(((bytes[1]) << 8 | bytes[0]) / 100 - 36);
+  if (current_load < 0) {
+    current_load = 0;
+  }
+
+  // Check BSC Data
+  printf("SOH:%u\n", message_receive.data[0]);
+  printf("SOC:%u\n", message_receive.data[1]);
+  printf("Ib:%f\n", current_battery);
+  printf("Ic:%f\n", current_cherger);
+  printf("Il:%f\n", current_load);
 
   while (!(twai_stop() == ESP_OK));
   // Serial.printf("TWAI stopped...\n");
