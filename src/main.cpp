@@ -54,18 +54,19 @@ void loop() {
   // Start TWAI driver
   while (!twai_start() == ESP_OK);
 
-  // Configure message to transmit
+  // // Configure message to transmit
   // twai_message_t message_transmit;
-  // message_transmit.identifier = 0x000;
-  // message_transmit.extd = 0;
-  // message_transmit.data_length_code = 7;
-  // message_transmit.data[0] = 8;
-  // message_transmit.data[1] = 1;
-  // message_transmit.data[2] = 5;
+  // message_transmit.identifier = 0x1806E5F4;
+  // message_transmit.extd = 1;
+  // message_transmit.data_length_code = 8;
+  // message_transmit.data[0] = 0;
+  // message_transmit.data[1] = 0;
+  // message_transmit.data[2] = 0;
   // message_transmit.data[3] = 0;
   // message_transmit.data[4] = 0;
-  // message_transmit.data[5] = 3;
-  // message_transmit.data[6] = 2;
+  // message_transmit.data[5] = 0;
+  // message_transmit.data[6] = 0;
+  // message_transmit.data[7] = 0;
 
   // // Queue message for transmission
   // if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_OK) {
@@ -85,35 +86,36 @@ void loop() {
   // }
 
   uint32_t identifier = 0x000;
+  uint32_t identifier_extd = 0x1806E5F4;
 
   // Wait for message to be received
   twai_message_t message_receive;
   while (1) {
-    if (twai_receive(&message_receive, pdMS_TO_TICKS(10000)) == ESP_OK) {
+    esp_err_t result = twai_receive(&message_receive, pdMS_TO_TICKS(20000));
+    if (result == ESP_OK) {
       printf("Message received\n");
+      if (message_receive.extd) {
+        printf("Message is in Extended Format\n");
+        printf("ID is %x\n", message_receive.identifier);
+      } else {
+        printf("Message is in Standard Format\n");
+        printf("ID is %x\n", message_receive.identifier);
+      }
+      if (!(message_receive.rtr)) {
+        for (int i = 0; i < message_receive.data_length_code; i++) {
+          printf("Data byte %d = %u\n", i, message_receive.data[i]);
+        }
+      }
       if (message_receive.identifier == identifier) break;
-    } else if (twai_receive(&message_receive, pdMS_TO_TICKS(10000)) == ESP_ERR_TIMEOUT) {
+      if (message_receive.identifier == identifier_extd) break;
+    } else if (result == ESP_ERR_TIMEOUT) {
       printf("ESP_ERR_TIMEOUT: twai_receive()\n");
-    } else if (twai_receive(&message_receive, pdMS_TO_TICKS(10000)) == ESP_ERR_INVALID_ARG) {
+    } else if (result == ESP_ERR_INVALID_ARG) {
       printf("ESP_ERR_INVALID_ARG: twai_receive()\n");
-    } else if (twai_receive(&message_receive, pdMS_TO_TICKS(10000)) == ESP_ERR_INVALID_STATE) {
+    } else if (result == ESP_ERR_INVALID_STATE) {
       printf("ESP_ERR_INVALID_STATE: twai_receive()\n");
     } else {
       printf("ESP_ERR_INVALID_STATE: not define()\n");
-    }
-  }
-
-  // Process received message
-  if (message_receive.extd) {
-    printf("Message is in Extended Format\n");
-    printf("ID is %x\n", message_receive.identifier);
-  } else {
-    printf("Message is in Standard Format\n");
-    printf("ID is %x\n", message_receive.identifier);
-  }
-  if (!(message_receive.rtr)) {
-    for (int i = 0; i < message_receive.data_length_code; i++) {
-      printf("Data byte %d = %u\n", i, message_receive.data[i]);
     }
   }
 
@@ -127,12 +129,13 @@ void loop() {
     current_load = 0;
   }
 
-  // Check BSC Data
-  printf("SOH:%u\n", message_receive.data[0]);
-  printf("SOC:%u\n", message_receive.data[1]);
-  printf("Ib:%f\n", current_battery);
-  printf("Ic:%f\n", current_cherger);
-  printf("Il:%f\n", current_load);
+  // output .csv
+  Serial.printf("Time /ms, ChargerState, ChargerCurrent /A, BatterySate, BatteryCurrent /A, SOC /%%\n");
+  printf("%u, ", message_receive.data[0]);
+  printf("%u, ", message_receive.data[1]);
+  printf("%f, ", current_battery);
+  printf("%f, ", current_cherger);
+  printf("%f\n", current_load);
 
   while (!(twai_stop() == ESP_OK));
   // Serial.printf("TWAI stopped...\n");
