@@ -18,7 +18,7 @@ void setup() {
 
   // Initialize configuration structures using macro initializers
   twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(kCanTx, kCanRx, TWAI_MODE_NORMAL);
-  twai_timing_config_t t_config = TWAI_TIMING_CONFIG_250KBITS();
+  twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();
   twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
 
   // Install TWAI driver
@@ -54,88 +54,87 @@ void loop() {
   // Start TWAI driver
   while (!twai_start() == ESP_OK);
 
-  // // Configure message to transmit
-  // twai_message_t message_transmit;
-  // message_transmit.identifier = 0x1806E5F4;
-  // message_transmit.extd = 1;
-  // message_transmit.data_length_code = 8;
-  // message_transmit.data[0] = 0;
-  // message_transmit.data[1] = 0;
-  // message_transmit.data[2] = 0;
-  // message_transmit.data[3] = 0;
-  // message_transmit.data[4] = 0;
-  // message_transmit.data[5] = 0;
-  // message_transmit.data[6] = 0;
-  // message_transmit.data[7] = 0;
+  // Configure message to transmit
+  twai_message_t message_transmit;
+  message_transmit.identifier = 0x110;
+  message_transmit.extd = false;
+  message_transmit.rtr = false;
+  message_transmit.data_length_code = 8;
+  message_transmit.data[0] = 0b00001000;
+  message_transmit.data[1] = 0;
+  message_transmit.data[2] = 0;
+  message_transmit.data[3] = 0;
+  message_transmit.data[4] = 0;
+  message_transmit.data[5] = 0;
+  message_transmit.data[6] = 0;
+  message_transmit.data[7] = 0;
 
-  // // Queue message for transmission
-  // if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_OK) {
-  //   printf("Message queued for transmission\n");
-  // } else if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_ERR_INVALID_ARG) {
-  //   printf("ESP_ERR_INVALID_ARG: twai_transmit()\n");
-  // } else if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_ERR_TIMEOUT) {
-  //   printf("ESP_ERR_INVALID_TIMEOUT: twai_transmit()\n");
-  // } else if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_FAIL) {
-  //   printf("ESP_FAIL: twai_transmit()\n");
-  // } else if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_ERR_INVALID_STATE) {
-  //   printf("ESP_ERR_INVALID_STATE: twai_transmit()\n");
-  // } else if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_ERR_NOT_SUPPORTED) {
-  //   printf("ESP_ERR_NOT_SUPPORTED: twai_transmit()\n");
-  // } else {
-  //   return;
-  // }
+  // Queue message for transmission
 
-  uint32_t identifier = 0x000;
-  uint32_t identifier_extd = 0x1806E5F4;
+  esp_err_t result = twai_transmit(&message_transmit, pdMS_TO_TICKS(1000));
+
+  if (result == ESP_OK) {
+    printf("Message queued for transmission\n");
+  } else if (result == ESP_ERR_INVALID_ARG) {
+    printf("ESP_ERR_INVALID_ARG: twai_transmit()\n");
+  } else if (result == ESP_ERR_TIMEOUT) {
+    printf("ESP_ERR_INVALID_TIMEOUT: twai_transmit()\n");
+  } else if (result == ESP_FAIL) {
+    printf("ESP_FAIL: twai_transmit()\n");
+  } else if (result == ESP_ERR_INVALID_STATE) {
+    printf("ESP_ERR_INVALID_STATE: twai_transmit()\n");
+  } else if (result == ESP_ERR_NOT_SUPPORTED) {
+    printf("ESP_ERR_NOT_SUPPORTED: twai_transmit()\n");
+  } else {
+    return;
+  }
 
   // Wait for message to be received
   twai_message_t message_receive;
-  while (1) {
-    esp_err_t result = twai_receive(&message_receive, pdMS_TO_TICKS(20000));
-    if (result == ESP_OK) {
-      printf("Message received\n");
-      if (message_receive.extd) {
-        printf("Message is in Extended Format\n");
-        printf("ID is %x\n", message_receive.identifier);
-      } else {
-        printf("Message is in Standard Format\n");
-        printf("ID is %x\n", message_receive.identifier);
-      }
-      if (!(message_receive.rtr)) {
-        for (int i = 0; i < message_receive.data_length_code; i++) {
-          printf("Data byte %d = %u\n", i, message_receive.data[i]);
-        }
-      }
-      if (message_receive.identifier == identifier) break;
-      if (message_receive.identifier == identifier_extd) break;
-    } else if (result == ESP_ERR_TIMEOUT) {
-      printf("ESP_ERR_TIMEOUT: twai_receive()\n");
-    } else if (result == ESP_ERR_INVALID_ARG) {
-      printf("ESP_ERR_INVALID_ARG: twai_receive()\n");
-    } else if (result == ESP_ERR_INVALID_STATE) {
-      printf("ESP_ERR_INVALID_STATE: twai_receive()\n");
+  // esp_err_t result = twai_receive(&message_receive, pdMS_TO_TICKS(1000));
+  result = twai_receive(&message_receive, pdMS_TO_TICKS(1000));
+  if (result == ESP_OK) {
+    printf("Message received\n");
+    if (message_receive.extd) {
+      printf("Message is in Extended Format\n");
+      printf("ID is %x\n", message_receive.identifier);
     } else {
-      printf("ESP_ERR_INVALID_STATE: not define()\n");
+      printf("Message is in Standard Format\n");
+      printf("ID is %x\n", message_receive.identifier);
     }
+    if (!(message_receive.rtr)) {
+      for (int i = 0; i < message_receive.data_length_code; i++) {
+        printf("Data byte %d = %u\n", i, message_receive.data[i]);
+      }
+    }
+  } else if (result == ESP_ERR_TIMEOUT) {
+    printf("ESP_ERR_TIMEOUT: twai_receive()\n");
+  } else if (result == ESP_ERR_INVALID_ARG) {
+    printf("ESP_ERR_INVALID_ARG: twai_receive()\n");
+  } else if (result == ESP_ERR_INVALID_STATE) {
+    printf("ESP_ERR_INVALID_STATE: twai_receive()\n");
+  } else {
+    printf("ESP_ERR_INVALID_STATE: not define()\n");
   }
 
-  std::array<uint8_t, 2> bytes = {message_receive.data[2], message_receive.data[3]};
-  float current_battery = static_cast<float>(((bytes[1]) << 8 | bytes[0]) / 100 - 36);
-  bytes = {message_receive.data[4], message_receive.data[5]};
-  float current_cherger = static_cast<float>(((bytes[1]) << 8 | bytes[0]) / 100);
-  bytes = {message_receive.data[6], message_receive.data[7]};
-  float current_load = static_cast<float>(((bytes[1]) << 8 | bytes[0]) / 100 - 36);
-  if (current_load < 0) {
-    current_load = 0;
+  if (message_receive.identifier == 0x100) {
+    std::array<uint8_t, 2> bytes = {message_receive.data[2], message_receive.data[3]};
+    float current_battery = static_cast<float>(((bytes[1]) << 8 | bytes[0]) / 100 - 100);
+    bytes = {message_receive.data[4], message_receive.data[5]};
+    float current_cherger = static_cast<float>(((bytes[1]) << 8 | bytes[0]) / 100);
+    bytes = {message_receive.data[6], message_receive.data[7]};
+    float current_load = static_cast<float>(((bytes[1]) << 8 | bytes[0]) / 100 - 100);
+    if (current_load < 0) {
+      current_load = 0;
+    }
+    // output .csv
+    // Serial.printf("Time /ms, ChargerState, ChargerCurrent /A, BatterySate, BatteryCurrent /A, SOC /%%\n");
+    printf("soh:%u, ", message_receive.data[0]);
+    printf("soc:%u, ", message_receive.data[1]);
+    printf("battery current:%f, ", current_battery);
+    printf("charger current:%f, ", current_cherger);
+    printf("load current:%f\n", current_load);
   }
-
-  // output .csv
-  Serial.printf("Time /ms, ChargerState, ChargerCurrent /A, BatterySate, BatteryCurrent /A, SOC /%%\n");
-  printf("%u, ", message_receive.data[0]);
-  printf("%u, ", message_receive.data[1]);
-  printf("%f, ", current_battery);
-  printf("%f, ", current_cherger);
-  printf("%f\n", current_load);
 
   while (!(twai_stop() == ESP_OK));
   // Serial.printf("TWAI stopped...\n");
