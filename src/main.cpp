@@ -10,9 +10,10 @@
 const gpio_num_t kCanTx = GPIO_NUM_9;
 const gpio_num_t kCanRx = GPIO_NUM_8;
 
+HardwareSerial MySerial(1);
+
 void setup() {
-  Serial.begin(115200);
-  while (!Serial);
+  MySerial.begin(115200, SERIAL_8N1, 34, 33);
 
   // Initialize configuration structures using macro initializers
   twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(kCanTx, kCanRx, TWAI_MODE_NORMAL);
@@ -21,6 +22,9 @@ void setup() {
 
   pinMode(BUILTIN_LED, OUTPUT);
   digitalWrite(BUILTIN_LED, HIGH);
+
+  pinMode(GPIO_NUM_45, OUTPUT);
+  digitalWrite(GPIO_NUM_45, HIGH);
 
   // Install TWAI driver
   while (!twai_driver_install(&g_config, &t_config, &f_config) == ESP_OK);
@@ -67,17 +71,17 @@ void loop() {
 
   // Queue message for transmission
   if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_OK) {
-    printf("Message queued for transmission\n");
+    MySerial.printf("Message queued for transmission\n");
   } else if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_ERR_INVALID_ARG) {
-    printf("ESP_ERR_INVALID_ARG: twai_transmit()\n");
+    MySerial.printf("ESP_ERR_INVALID_ARG: twai_transmit()\n");
   } else if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_ERR_TIMEOUT) {
-    printf("ESP_ERR_INVALID_TIMEOUT: twai_transmit()\n");
+    MySerial.printf("ESP_ERR_INVALID_TIMEOUT: twai_transmit()\n");
   } else if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_FAIL) {
-    printf("ESP_FAIL: twai_transmit()\n");
+    MySerial.printf("ESP_FAIL: twai_transmit()\n");
   } else if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_ERR_INVALID_STATE) {
-    printf("ESP_ERR_INVALID_STATE: twai_transmit()\n");
+    MySerial.printf("ESP_ERR_INVALID_STATE: twai_transmit()\n");
   } else if (twai_transmit(&message_transmit, pdMS_TO_TICKS(1000)) == ESP_ERR_NOT_SUPPORTED) {
-    printf("ESP_ERR_NOT_SUPPORTED: twai_transmit()\n");
+    MySerial.printf("ESP_ERR_NOT_SUPPORTED: twai_transmit()\n");
   } else {
     return;
   }
@@ -86,32 +90,28 @@ void loop() {
 
   // Wait for message to be received
   twai_message_t message_receive;
-  while (1) {
-    esp_err_t result = twai_receive(&message_receive, pdMS_TO_TICKS(3000));
-    if (result == ESP_OK) {
-      printf("Message received\n");
-      if (message_receive.identifier == identifier) break;
-    } else if (result == ESP_ERR_TIMEOUT) {
-      printf("ESP_ERR_TIMEOUT: twai_receive()\n");
-    } else if (result == ESP_ERR_INVALID_ARG) {
-      printf("ESP_ERR_INVALID_ARG: twai_receive()\n");
-    } else if (result == ESP_ERR_INVALID_STATE) {
-      printf("ESP_ERR_INVALID_STATE: twai_receive()\n");
-    }
-    printf("--->\n");
+  esp_err_t result = twai_receive(&message_receive, pdMS_TO_TICKS(3000));
+  if (result == ESP_OK) {
+    MySerial.printf("Message received\n");
+  } else if (result == ESP_ERR_TIMEOUT) {
+    MySerial.printf("ESP_ERR_TIMEOUT: twai_receive()\n");
+  } else if (result == ESP_ERR_INVALID_ARG) {
+    MySerial.printf("ESP_ERR_INVALID_ARG: twai_receive()\n");
+  } else if (result == ESP_ERR_INVALID_STATE) {
+    MySerial.printf("ESP_ERR_INVALID_STATE: twai_receive()\n");
   }
-
+  MySerial.printf("--->\n");
   // Process received message
   if (message_receive.extd) {
-    printf("Message is in Extended Format\n");
-    printf("ID is %x\n", message_receive.identifier);
+    MySerial.printf("Message is in Extended Format\n");
+    MySerial.printf("ID is %x\n", message_receive.identifier);
   } else {
-    printf("Message is in Standard Format\n");
-    printf("ID is %x\n", message_receive.identifier);
+    MySerial.printf("Message is in Standard Format\n");
+    MySerial.printf("ID is %x\n", message_receive.identifier);
   }
   if (!(message_receive.rtr)) {
     for (int i = 0; i < message_receive.data_length_code; i++) {
-      printf("Data byte %d = %x\n", i, message_receive.data[i]);
+      MySerial.printf("Data byte %d = %x\n", i, message_receive.data[i]);
     }
   }
 
