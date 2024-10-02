@@ -7,8 +7,8 @@
 // const gpio_num_t kCanRx = GPIO_NUM_7;
 
 // sub
-const gpio_num_t kCanTx = GPIO_NUM_9;
-const gpio_num_t kCanRx = GPIO_NUM_8;
+const gpio_num_t kCanTx = GPIO_NUM_43;
+const gpio_num_t kCanRx = GPIO_NUM_44;
 
 HardwareSerial MySerial(1);
 
