@@ -12,6 +12,30 @@
 const gpio_num_t kCanTx = GPIO_NUM_4;
 const gpio_num_t kCanRx = GPIO_NUM_5;
 
+namespace byte_0 {
+constexpr auto kSocReset = 0b00000001;
+constexpr auto kCharging = 0b00000100;
+constexpr auto kShutdown = 0b00001000;
+}  // namespace byte_0
+namespace byte_1 {
+namespace mode_operating {
+constexpr auto kStop = 0b0000;
+constexpr auto kDischarge = 0b0001;
+constexpr auto kCharge = 0b0010;
+constexpr auto kPlugin = 0b0011;
+}  // namespace mode_operating
+namespace flag_contactor {
+constexpr auto kCharging = 0b00010000;
+constexpr auto kDischarging = 0b00100000;
+constexpr auto kEvRelay = 0b01000000;
+}  // namespace flag_contactor
+}  // namespace byte_1
+namespace byte_3 {
+constexpr auto kOffsetTemperature = 55;
+}
+namespace byte_4 {
+constexpr auto kOffsetTemperature = 55;
+}
 void setup() {
   Serial.begin(115200);
   while (!Serial);
@@ -60,14 +84,18 @@ void loop() {
   message_transmit.extd = false;
   message_transmit.rtr = false;
   message_transmit.data_length_code = 8;
-  message_transmit.data[0] = 0b00001000;
-  message_transmit.data[1] = 0;
-  message_transmit.data[2] = 0;
-  message_transmit.data[3] = 0;
-  message_transmit.data[4] = 0;
+  message_transmit.data[0] = (byte_0::kSocReset | byte_0::kCharging);
+  message_transmit.data[1] = (byte_1::mode_operating::kCharge | byte_1::flag_contactor::kCharging);
+  message_transmit.data[2] = 15;                              // OCV_SOC
+  message_transmit.data[3] = 30 + byte_3::kOffsetTemperature;  // Cell_Temp_Max
+  message_transmit.data[4] = 20 + byte_4::kOffsetTemperature;  // Cell_Temp_Min
   message_transmit.data[5] = 0;
   message_transmit.data[6] = 0;
   message_transmit.data[7] = 0;
+
+  for (size_t i = 0; i < 8; i++) {
+    printf("message[%d]:%u\n", i, message_transmit.data[i]);
+  }
 
   // Queue message for transmission
 
