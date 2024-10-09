@@ -84,22 +84,24 @@ void loop() {
   message_transmit.extd = false;
   message_transmit.rtr = false;
   message_transmit.data_length_code = 8;
-  message_transmit.data[0] = (byte_0::kSocReset | byte_0::kCharging);
-  message_transmit.data[1] = (byte_1::mode_operating::kCharge | byte_1::flag_contactor::kCharging);
-  message_transmit.data[2] = 15;                              // OCV_SOC
+  // message_transmit.data[0] = byte_0::kShutdown;
+  message_transmit.data[0] = 0;
+  // message_transmit.data[1] = (byte_1::mode_operating::kCharge | byte_1::flag_contactor::kCharging);
+  message_transmit.data[1] = 0;
+  message_transmit.data[2] = 50;                               // OCV_SOC
   message_transmit.data[3] = 30 + byte_3::kOffsetTemperature;  // Cell_Temp_Max
   message_transmit.data[4] = 20 + byte_4::kOffsetTemperature;  // Cell_Temp_Min
   message_transmit.data[5] = 0;
   message_transmit.data[6] = 0;
   message_transmit.data[7] = 0;
 
-  for (size_t i = 0; i < 8; i++) {
-    printf("message[%d]:%u\n", i, message_transmit.data[i]);
-  }
+  // for (size_t i = 0; i < 8; i++) {
+  //   printf("message[%d]:%u\n", i, message_transmit.data[i]);
+  // }
 
   // Queue message for transmission
 
-  esp_err_t result = twai_transmit(&message_transmit, pdMS_TO_TICKS(1000));
+  esp_err_t result = twai_transmit(&message_transmit, pdMS_TO_TICKS(50));
 
   if (result == ESP_OK) {
     printf("Message queued for transmission\n");
@@ -120,7 +122,7 @@ void loop() {
   // Wait for message to be received
   twai_message_t message_receive;
   // esp_err_t result = twai_receive(&message_receive, pdMS_TO_TICKS(1000));
-  result = twai_receive(&message_receive, pdMS_TO_TICKS(1000));
+  result = twai_receive(&message_receive, pdMS_TO_TICKS(500));
   if (result == ESP_OK) {
     printf("Message received\n");
     if (message_receive.extd) {
